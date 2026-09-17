@@ -4,6 +4,7 @@ domain services never import Vapi schemas.
 
 from __future__ import annotations
 
+import json
 from typing import Any
 
 from pydantic import BaseModel, Field
@@ -76,13 +77,24 @@ def parse_server_message(body: dict[str, Any]) -> ParsedMessage | None:
     for tc in message.get("toolCallList") or []:
         if not isinstance(tc, dict) or not tc.get("id"):
             continue
+        parameters = (
+            tc.get("parameters")
+            or tc.get("function", {}).get("arguments")
+            or {}
+        )
+        if isinstance(parameters, str):
+            # Vapi sends function.arguments as a JSON-encoded string.
+            try:
+                parameters = json.loads(parameters)
+            except (json.JSONDecodeError, TypeError):
+                parameters = {}
+        if not isinstance(parameters, dict):
+            parameters = {}
         tool_calls.append(
             VapiToolCall(
                 id=tc["id"],
                 name=tc.get("name") or tc.get("function", {}).get("name", ""),
-                parameters=tc.get("parameters")
-                or tc.get("function", {}).get("arguments")
-                or {},
+                parameters=parameters,
             )
         )
 
