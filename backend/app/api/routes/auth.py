@@ -19,7 +19,9 @@ router = APIRouter(prefix="/auth", tags=["auth"])
 def _set_auth_cookies(
     response: Response, settings, session_token: str, csrf_token: str
 ) -> None:
-    secure = settings.auth_cookie_secure and settings.is_production
+    # Controlled by env: prod sets secure+none (cross-site), local dev may do
+    # the same since browsers treat localhost/127.0.0.1 as secure contexts.
+    secure = settings.auth_cookie_secure
     samesite = settings.auth_cookie_samesite
     if samesite == "none" and not secure:
         samesite = "lax"  # browsers reject SameSite=None without Secure

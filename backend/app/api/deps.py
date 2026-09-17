@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import re
 import time
 from collections import defaultdict, deque
 from typing import Annotated, Any
@@ -57,7 +58,7 @@ async def csrf_protect(
     if request.method in ("GET", "HEAD", "OPTIONS"):
         return
     origin = request.headers.get("origin")
-    if origin and settings.frontend_origin_list and origin not in settings.frontend_origin_list:
+    if origin and not _origin_allowed(origin, settings):
         raise ForbiddenError("Origin not allowed")
     token = request.cookies.get(settings.auth_cookie_name)
     if not token:
@@ -69,6 +70,17 @@ async def csrf_protect(
         raise ForbiddenError("CSRF validation failed")
     if not session_svc.verify_csrf(session_hash, settings.auth_csrf_secret, csrf_header):
         raise ForbiddenError("CSRF validation failed")
+
+
+_DEV_ORIGIN_RE = re.compile(r"^https?://(localhost|127\.0\.0\.1|\[::1\])(:\d+)?$")
+
+
+def _origin_allowed(origin: str, settings: Settings) -> bool:
+    if origin in settings.frontend_origin_list:
+        return True
+    if not settings.is_production:
+        return bool(_DEV_ORIGIN_RE.match(origin))
+    return False
 
 
 CsrfDep = Depends(csrf_protect)

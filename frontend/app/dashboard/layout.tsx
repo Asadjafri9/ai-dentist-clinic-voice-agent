@@ -42,6 +42,15 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     if (typeof window !== "undefined") router.replace("/login");
     return null;
   }
+  if (error) {
+    return (
+      <div className="flex min-h-screen items-center justify-center">
+        <p className="text-sm text-muted-foreground">
+          Can't reach the API ({error.message}). Check that the backend is running.
+        </p>
+      </div>
+    );
+  }
 
   const clinicName = data?.business?.name ?? "…";
   const tz = data?.business?.timezone ?? "UTC";

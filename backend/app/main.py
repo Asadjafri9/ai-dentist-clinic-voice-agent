@@ -50,13 +50,16 @@ def create_app() -> FastAPI:
         openapi_url=None if settings.is_production else "/openapi.json",
     )
 
-    app.add_middleware(
-        CORSMiddleware,
-        allow_origins=settings.frontend_origin_list,
-        allow_credentials=True,
-        allow_methods=["GET", "POST", "PATCH", "DELETE", "OPTIONS"],
-        allow_headers=["Content-Type", "X-CSRF-Token"],
-    )
+    cors_kwargs: dict = {
+        "allow_origins": settings.frontend_origin_list,
+        "allow_credentials": True,
+        "allow_methods": ["GET", "POST", "PATCH", "DELETE", "OPTIONS"],
+        "allow_headers": ["Content-Type", "X-CSRF-Token"],
+    }
+    if not settings.is_production:
+        # Dev: allow any localhost/127.0.0.1 port (e.g. preview proxies).
+        cors_kwargs["allow_origin_regex"] = r"https?://(localhost|127\.0\.0\.1|\[::1\])(:\d+)?"
+    app.add_middleware(CORSMiddleware, **cors_kwargs)
 
     @app.middleware("http")
     async def request_context(request: Request, call_next):
