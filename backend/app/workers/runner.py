@@ -1,9 +1,11 @@
 """Worker process: claims jobs with a lease, retries transient failures
 with backoff, and dead-letters exhausted jobs. Run as a separate
-process: `python -m app.workers.runner`."""
+process: `python -m app.workers.runner`, or `--once` to drain pending
+jobs and exit (for scheduled/cron execution)."""
 
 from __future__ import annotations
 
+import argparse
 import asyncio
 import secrets
 import signal
@@ -24,10 +26,11 @@ RETENTION_INTERVAL_SECONDS = 3600
 
 
 class Worker:
-    def __init__(self) -> None:
+    def __init__(self, once: bool = False) -> None:
         self.settings = get_settings()
         self.worker_id = f"wrk_{secrets.token_hex(6)}"
         self.running = True
+        self.once = once
         self._last_retention_check = 0.0
 
     async def run(self) -> None:
@@ -41,20 +44,33 @@ class Worker:
         for sig in (signal.SIGINT, signal.SIGTERM):
             loop.add_signal_handler(sig, self.stop)
 
-        logger.info("worker_started", worker_id=self.worker_id)
+        logger.info("worker_started", worker_id=self.worker_id, once=self.once)
         while self.running:
             try:
+                await self._heartbeat(db)
                 await jobs.requeue_expired_leases()
                 await self._maybe_schedule_retention(db)
                 job = await jobs.claim(self.worker_id, self.settings.worker_lease_seconds)
                 if job is None:
+                    if self.once:
+                        break
                     await asyncio.sleep(self.settings.worker_poll_seconds)
                     continue
                 await self._execute(db, jobs, job)
             except Exception:
                 logger.exception("worker_loop_error")
+                if self.once:
+                    raise
                 await asyncio.sleep(2)
+        await self._heartbeat(db)
         await close_client()
+
+    async def _heartbeat(self, db) -> None:
+        await db["meta"].update_one(
+            {"_id": "last_worker_heartbeat"},
+            {"$set": {"at": now_utc(), "worker_id": self.worker_id}},
+            upsert=True,
+        )
 
     def stop(self) -> None:
         self.running = False
@@ -98,7 +114,14 @@ class Worker:
 
 
 def main() -> None:
-    asyncio.run(Worker().run())
+    parser = argparse.ArgumentParser()
+    parser.add_argument(
+        "--once",
+        action="store_true",
+        help="Drain pending jobs and exit (for cron/scheduled execution).",
+    )
+    args = parser.parse_args()
+    asyncio.run(Worker(once=args.once).run())
 
 
 if __name__ == "__main__":

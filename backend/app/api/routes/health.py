@@ -26,15 +26,17 @@ async def ready(request: Request, db: DbDep) -> dict:
     )
     checks["tenant_mapping"] = mapping is not None
 
-    # Worker freshness: newest completed job or heartbeat within 10 min.
+    # Worker freshness: heartbeat or job activity within 10 min.
     from datetime import timedelta
 
     from app.services.timeutil import now_utc
 
-    fresh_job = await db["jobs"].find_one(
-        {"updated_at": {"$gte": now_utc() - timedelta(minutes=10)}}
-    )
-    checks["worker"] = fresh_job is not None
+    cutoff = now_utc() - timedelta(minutes=10)
+    heartbeat = await db["meta"].find_one({"_id": "last_worker_heartbeat"})
+    fresh_job = await db["jobs"].find_one({"updated_at": {"$gte": cutoff}})
+    checks["worker"] = (
+        heartbeat is not None and heartbeat.get("at") and heartbeat["at"] >= cutoff
+    ) or fresh_job is not None
 
     degraded = [k for k, v in checks.items() if not v]
     status = "ready" if not degraded else ("degraded" if checks["database"] else "down")
