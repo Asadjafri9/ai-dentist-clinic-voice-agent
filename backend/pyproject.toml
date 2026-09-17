@@ -1,0 +1,60 @@
+[project]
+name = "ai-dentist-voice-agent-backend"
+version = "0.1.0"
+description = "FastAPI backend for the dental clinic AI voice receptionist"
+requires-python = ">=3.12"
+dependencies = [
+    "fastapi==0.116.1",
+    "uvicorn[standard]==0.35.0",
+    "pydantic==2.11.7",
+    "pydantic-settings==2.10.1",
+    "pymongo[srv]==4.13.2",
+    "argon2-cffi==25.1.0",
+    "phonenumbers==9.0.10",
+    "httpx==0.28.1",
+    "structlog==25.4.0",
+    "email-validator==2.2.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest==8.4.1",
+    "pytest-asyncio==1.1.0",
+    "ruff==0.12.7",
+    "mypy==1.17.0",
+    "httpx==0.28.1",
+]
+
+[project.scripts]
+seed-demo = "app.scripts.seed_demo:main"
+create-admin = "app.scripts.create_admin:main"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["app"]
+
+[tool.ruff]
+target-version = "py312"
+line-length = 100
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B", "ASYNC", "S"]
+ignore = ["S101"]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/**" = ["S105", "S106"]
+"app/integrations/vapi/assistant.py" = ["E501"]
+
+[tool.mypy]
+python_version = "3.12"
+strict = false
+ignore_missing_imports = true
+plugins = ["pydantic.mypy"]
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+asyncio_default_fixture_loop_scope = "function"
+testpaths = ["tests"]
