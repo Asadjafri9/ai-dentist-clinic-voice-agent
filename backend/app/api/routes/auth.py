@@ -19,10 +19,14 @@ router = APIRouter(prefix="/auth", tags=["auth"])
 def _set_auth_cookies(
     response: Response, settings, session_token: str, csrf_token: str
 ) -> None:
+    secure = settings.auth_cookie_secure and settings.is_production
+    samesite = settings.auth_cookie_samesite
+    if samesite == "none" and not secure:
+        samesite = "lax"  # browsers reject SameSite=None without Secure
     common = {
-        "secure": settings.auth_cookie_secure and settings.is_production,
+        "secure": secure,
         "httponly": True,
-        "samesite": "lax",
+        "samesite": samesite,
         "path": "/",
         "max_age": settings.auth_session_ttl_hours * 3600,
     }

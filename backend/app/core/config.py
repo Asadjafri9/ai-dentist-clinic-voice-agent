@@ -29,6 +29,8 @@ class Settings(BaseSettings):
     auth_session_ttl_hours: int = 24
     auth_csrf_secret: str = ""
     auth_cookie_secure: bool = True
+    # Cross-site frontends (e.g. Vercel -> Render) require "none".
+    auth_cookie_samesite: Literal["lax", "strict", "none"] = "lax"
 
     vapi_api_key: str = ""
     vapi_server_credential_mode: Literal["hmac", "bearer"] = "hmac"

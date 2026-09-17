@@ -53,9 +53,12 @@ BusinessDep = Annotated[dict[str, Any], Depends(require_business)]
 async def csrf_protect(
     request: Request, settings: SettingsDep
 ) -> None:
-    """Double-submit CSRF check for cookie-authenticated mutations."""
+    """Double-submit CSRF check + Origin allowlist for cookie-auth mutations."""
     if request.method in ("GET", "HEAD", "OPTIONS"):
         return
+    origin = request.headers.get("origin")
+    if origin and settings.frontend_origin_list and origin not in settings.frontend_origin_list:
+        raise ForbiddenError("Origin not allowed")
     token = request.cookies.get(settings.auth_cookie_name)
     if not token:
         return  # unauthenticated requests handled by auth dep
