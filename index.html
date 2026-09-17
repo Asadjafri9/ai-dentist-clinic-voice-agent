@@ -1,0 +1,35 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>CareCall AI — Dental clinic voice agent</title>
+    <link rel="stylesheet" href="./src/styles.css" />
+  </head>
+  <body>
+    <main class="shell">
+      <nav><span class="mark">✦</span><span>CareCall AI</span><span class="badge">Dental clinic voice agent</span></nav>
+      <section class="hero">
+        <div>
+          <p class="eyebrow">Always-on patient access</p>
+          <h1>Your clinic’s<br /><em>calmest</em> first hello.</h1>
+          <p class="intro">A thoughtful AI receptionist that answers every call, understands patient needs, and keeps your front desk focused on care.</p>
+          <button id="demoButton">Hear a sample call <span>↗</span></button>
+        </div>
+        <aside class="call-card">
+          <div class="call-top"><span class="live-dot"></span> Live conversation <span class="time">00:42</span></div>
+          <div class="wave" aria-label="Voice activity visualization"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
+          <p class="quote">“I can help you find an appointment that works. Are you looking for a routine cleaning or something more urgent?”</p>
+          <div class="caller"><span>SM</span><div><strong>Sarah Mitchell</strong><small>New patient · General inquiry</small></div></div>
+        </aside>
+      </section>
+      <section class="stats"><div><strong>24/7</strong><span>Available for every call</span></div><div><strong>3×</strong><span>More appointments captured</span></div><div><strong>0</strong><span>Missed opportunities</span></div></section>
+      <p class="footnote" id="status">Prototype preview · Built for modern dental teams</p>
+    </main>
+    <script>
+      document.getElementById('demoButton').addEventListener('click', () => {
+        document.getElementById('status').textContent = 'Demo queued · Connect a realtime voice provider to play live calls';
+      });
+    </script>
+  </body>
+</html>

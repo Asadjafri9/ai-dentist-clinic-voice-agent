@@ -1,0 +1,9 @@
+{
+  "name": "ai-dentist-clinic-voice-agent",
+  "private": true,
+  "version": "0.1.0",
+  "description": "AI voice receptionist concept for dental clinics",
+  "scripts": {
+    "start": "npx serve ."
+  }
+}
