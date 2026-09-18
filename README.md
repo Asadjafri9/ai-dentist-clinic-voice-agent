@@ -79,16 +79,18 @@ Deployed topology (all free-tier):
 
 | Piece      | Where   | URL                                                  |
 |------------|---------|------------------------------------------------------|
-| API+worker | Render  | `https://ai-dentist-voice-agent-api.onrender.com`    |
+| API+worker | Railway | `https://ai-dentist-voice-agent-api-production.up.railway.app` |
 | Dashboard  | Vercel  | `https://ai-dentist-clinic-voice-agent.vercel.app`   |
 | Database   | Atlas   | `cluster0.ttdlhvh.mongodb.net` (project ai-voice-agent) |
 | Telephony  | Vapi    | `+1 661 463 3323`                                    |
 
-Render runs `backend/start.sh`, which launches the job worker alongside uvicorn in one
-container (free tier has no background-worker plan; jobs are durable in MongoDB, and at
-scale the worker can be split into its own service). Required env vars are in
-`backend/.env.example`; production additionally needs `APP_ENV=production` and
-`AUTH_COOKIE_SAMESITE=none` (cross-site cookie between Vercel and Render).
+Railway runs `backend/start.sh` (service `ai-dentist-voice-agent-api` in project
+`exemplary-radiance`, `rootDirectory=backend`, deps installed via
+`backend/requirements.txt`), which launches the job worker alongside uvicorn in one
+container (jobs are durable in MongoDB, and at scale the worker can be split into its
+own service). Required env vars are in `backend/.env.example`; production additionally
+needs `APP_ENV=production` and `AUTH_COOKIE_SAMESITE=none` (cross-site cookie between
+Vercel and Railway).
 
 Vapi wiring: assistant `server.url` points at the webhook endpoint with a saved
 `custom-credential` (HMAC-SHA256, `x-signature`/`x-timestamp` headers, `{timestamp}.{body}`
