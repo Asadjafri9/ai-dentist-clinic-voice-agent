@@ -48,23 +48,18 @@ def clinic_info_payload(business: dict[str, Any]) -> dict[str, Any]:
 
 
 def services_payload(
-    services: list[dict[str, Any]], providers: list[dict[str, Any]]
+    services: list[dict[str, Any]], providers: list[dict[str, Any]]  # noqa: ARG001 - providers reserved for future use
 ) -> dict[str, Any]:
-    out = []
-    for s in services:
-        eligible = [
-            p["name"]
-            for p in providers
-            if s["_id"] in (p.get("service_ids") or [])
-        ]
-        out.append(
-            {
-                "slug": s["slug"],
-                "display_name": s["display_name"],
-                "description": s.get("description"),
-                "aliases": s.get("aliases") or [],
-                "duration_minutes": s["duration_minutes"],
-                "providers": eligible,
-            }
-        )
+    # Provider names are deliberately not exposed to callers — the backend
+    # assigns whichever eligible provider is free for the chosen slot.
+    out = [
+        {
+            "slug": s["slug"],
+            "display_name": s["display_name"],
+            "description": s.get("description"),
+            "aliases": s.get("aliases") or [],
+            "duration_minutes": s["duration_minutes"],
+        }
+        for s in services
+    ]
     return {"ok": True, "services": out}

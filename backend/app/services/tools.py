@@ -98,12 +98,10 @@ async def tool_get_available_slots(
                 f"There are a few providers with a similar name: {names}. Which one did you mean?",
             )
         if not matches:
-            eligible = await _eligible_providers(db, business["_id"], service)
-            names = ", ".join(p["name"] for p in eligible) or "our team"
             return tool_failure(
                 "INVALID_DETAILS",
-                "I couldn't find that provider. "
-                f"Available providers for this visit include {names}.",
+                "I couldn't find a provider by that name. "
+                "I can still check the next available times for you.",
             )
         providers = matches
         if service["_id"] not in (providers[0].get("service_ids") or []):
